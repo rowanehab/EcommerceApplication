@@ -45,8 +45,8 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authz -> {
                     authz.requestMatchers("/api/users/save").permitAll();
                     authz.requestMatchers("/api/users/login").permitAll();
-                    //authz.requestMatchers("/SadRo");
-                    //authz.requestMatchers("/okRo");
+                    authz.requestMatchers("/api/wallets/deduct").permitAll();
+
                     authz.anyRequest().authenticated();
                 });
         http.httpBasic(Customizer.withDefaults());

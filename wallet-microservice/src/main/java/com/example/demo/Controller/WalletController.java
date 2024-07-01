@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -51,6 +52,16 @@ public class WalletController {
         } else {
             // Bank account does not exist
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Bank account not found for card number: " + bankAccountDTO.getCardNumber());
+        }
+    }
+
+    @PutMapping("/deduct")
+    public ResponseEntity<String> deductFunds(@RequestParam Long userId, @RequestParam BigDecimal amount) {
+        boolean success = walletService.deductFunds(userId, amount);
+        if (success) {
+            return ResponseEntity.ok("Funds deducted successfully.");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Insufficient funds or wallet not found.");
         }
     }
     @PostMapping("/deposit")
@@ -93,6 +104,11 @@ public class WalletController {
         }
         List<Transaction> transactions = walletService.getTransactionHistory(userId);
         return ResponseEntity.ok(transactions);
+    }
+
+    @GetMapping("/Happy")
+    public String Happy() {
+     return "Happy";
     }
 
 

@@ -12,12 +12,16 @@ import com.example.demo.Repository.TransactionRepository;
 import com.example.demo.Repository.UserRepository;
 import com.example.demo.Repository.WalletRepository;
 import com.example.demo.Service.WalletService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+
+
 
 @Service
 public class WalletIMPL implements WalletService {
@@ -29,6 +33,7 @@ public class WalletIMPL implements WalletService {
     private UserRepository userRepository;
     @Autowired
     private TransactionRepository transactionRepository;
+    public static final Logger logger = LoggerFactory.getLogger(WalletIMPL.class);
 
     // Constructor injection
     public WalletIMPL(WalletRepository walletRepository, BankAccountRepository bankAccountRepository, UserRepository userRepository) {
@@ -65,6 +70,7 @@ public class WalletIMPL implements WalletService {
             return null;
         }
     }
+
 
     public String deposit(DepositDTO depositDTO) {
         Optional<Wallet> senderWalletOptional = walletRepository.findByUserId(depositDTO.getUserId());
@@ -119,6 +125,46 @@ public class WalletIMPL implements WalletService {
     }
 
     @Override
+    public boolean deductFunds(Long userId, BigDecimal amount) {
+        // Log the parameters
+        logger.info("Attempting to deduct {} from userId {}", amount, userId);
+
+        Optional<Wallet> walletOptional = walletRepository.findByUserId(userId);
+        if (walletOptional.isPresent()) {
+            Wallet wallet = walletOptional.get();
+            BigDecimal currentBalance = wallet.getBalance();
+            logger.info("Current balance: {}", currentBalance);
+
+            // Check if the wallet has sufficient balance
+            if (currentBalance.compareTo(amount) >= 0) {
+                // Deduct the amount from the wallet
+                wallet.setBalance(currentBalance.subtract(amount));
+                walletRepository.save(wallet);
+
+                // Log the transaction
+                transactionRepository.save(new Transaction(
+                        userId,
+                        "Payment Deduction",
+                        amount.negate(),
+                        wallet.getWalletID()
+                ));
+
+                logger.info("Successfully deducted {} from userId {}", amount, userId);
+                return true;
+            } else {
+                // Insufficient funds
+                logger.warn("Insufficient funds for userId {}. Attempted to deduct {}, but balance is {}", userId, amount, currentBalance);
+                return false;
+            }
+        } else {
+            // Wallet not found
+            logger.warn("Wallet not found for userId {}", userId);
+            return false;
+        }
+    }
+
+
+    @Override
     public String withdrawal(WithdrawalDTO withdrawalDTO) {
         Optional<Wallet> walletOptional = walletRepository.findByUserId(withdrawalDTO.getUserId());
         if (walletOptional.isPresent()) {
@@ -146,4 +192,5 @@ public class WalletIMPL implements WalletService {
             return "Failure: Wallet not found for user.";
         }
     }
+
 }

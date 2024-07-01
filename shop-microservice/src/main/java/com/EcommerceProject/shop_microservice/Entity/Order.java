@@ -1,11 +1,11 @@
 package com.EcommerceProject.shop_microservice.Entity;
 
 import jakarta.persistence.*;
-
 import java.util.List;
 
 @Entity
-public class ShoppingCart {
+@Table(name = "orders")
+public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,7 +14,9 @@ public class ShoppingCart {
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Product> products;
 
+
     private Long userId;
+    private String status; // e.g., "CREATED", "PAID", "SHIPPED", "DELIVERED"
 
     // Getters and setters
     public Long getId() {
@@ -39,5 +41,13 @@ public class ShoppingCart {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }
